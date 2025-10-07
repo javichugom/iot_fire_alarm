@@ -14,14 +14,15 @@
 
 #define TAG "EMERGENCY_FIRE"
 
-#define WIFI_SSID      "MOVISTAR-WIFI6-F000"
-#define WIFI_PASS      "nKJETHW3CJ9T9EUU9FWC"
+#define WIFI_SSID      "YOUR_WIFI_HERE"
+#define WIFI_PASS      "YOUR_PASSSWORD_HERE"
 #define MQTT_BROKER_URI "mqtt://broker.hivemq.com"
 
-#define STREET_NAME "Calle Gutiérrez Sañudo"
-#define LATITUDE 40.40303910258323
-#define LONGITUDE -3.6563807181369543
+#define STREET_NAME "Calle de Lira"
+#define LATITUDE 40.4170128
+#define LONGITUDE -3.703529
 #define FLOOR 3
+#define SENSOR_TYPE DHT_TYPE_DHT11
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                                int32_t event_id, void* event_data) {
@@ -154,11 +155,10 @@ void tmp_task(void *pvParameters)
     humidity = 0.0;
     while(1)
     {
-        /* Cuando se tenga el sensor de temperatura se descomenta
-        *  dht_read_float_data(SENSOR_TYPE, 33, &humidity, &temperatura);
-        */
+       dht_read_float_data(SENSOR_TYPE, 33, &humidity, &temperature);
        mqtt_publish_tmp(temperature);
        vTaskDelay(pdMS_TO_TICKS(400));
+       ESP_LOGI(TAG, "Temperatura: %f ºC", temperature);
     }
 }
 
