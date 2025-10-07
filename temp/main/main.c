@@ -14,14 +14,14 @@
 
 #define TAG "EMERGENCY_FIRE"
 
-#define WIFI_SSID      "YOUR_WIFI_HERE"
-#define WIFI_PASS      "YOUR_PASSSWORD_HERE"
+#define WIFI_SSID      "*"
+#define WIFI_PASS      "*"
 #define MQTT_BROKER_URI "mqtt://broker.hivemq.com"
 
-#define STREET_NAME "Calle de Lira"
-#define LATITUDE 40.4170128
-#define LONGITUDE -3.703529
-#define FLOOR 3
+#define STREET_NAME "*"
+#define LATITUDE 0
+#define LONGITUDE 0
+#define FLOOR 1
 #define SENSOR_TYPE DHT_TYPE_DHT11
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,
@@ -87,8 +87,10 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
             ESP_LOGI(TAG, "Mensaje recibido en %.*s: %.*s",
                      event->topic_len, event->topic,
                      event->data_len, event->data);
+            ESP_LOGI(TAG, "Payload: %.*s", event->data_len, event->data);
             break;
-
+        case MQTT_EVENT_SUBSCRIBED:
+             ESP_LOGI(TAG, "Suscripción confirmada, msg_id=%d", event->msg_id);
         default:
             break;
     }
@@ -120,8 +122,9 @@ static void mqtt_publish_tmp(float temp)
 
     cJSON_AddNumberToObject(root, "payload",temp);
     char *post_data = cJSON_PrintUnformatted(root);
-    esp_mqtt_client_publish(client, "esp32/edf1/tmp1", post_data, 0, 1, 1);
+    esp_mqtt_client_publish(client, "edf1/fl2/tmp1", post_data, 0, 1, 1);
     free(post_data);
+    cJSON_Delete(root);
 }
 
 static void mqtt_publish_smk(int valor)
@@ -130,8 +133,22 @@ static void mqtt_publish_smk(int valor)
 
     cJSON_AddNumberToObject(root, "payload",valor);
     char *post_data = cJSON_PrintUnformatted(root);
-    esp_mqtt_client_publish(client, "esp32/edf1/smk1", post_data, 0, 1, 2);
+    esp_mqtt_client_publish(client, "edf1/fl2/smk1", post_data, 0, 1, 1);
     free(post_data);
+    cJSON_Delete(root);
+}
+
+static void mqtt_publish_tmp_register(float temp, int smk)
+{
+    cJSON *root = cJSON_CreateObject();
+
+    cJSON_AddNumberToObject(root, "tmp",temp);
+    cJSON_AddNumberToObject(root, "smk", smk);
+    cJSON_AddNumberToObject(root, "flr", 2);
+    char *post_data = cJSON_PrintUnformatted(root);
+    esp_mqtt_client_publish(client, "edf1/fl2/reg1", post_data, 0, 1, 1);
+    free(post_data);
+    cJSON_Delete(root);
 }
 
 float temperature = 200.0;
@@ -145,7 +162,7 @@ void smk_task(void *pvParameters)
     {
         output_smk = detect_smk();
         mqtt_publish_smk(output_smk);
-        vTaskDelay(200/portTICK_PERIOD_MS);
+        vTaskDelay(pdMS_TO_TICKS(200));
     }
 }
 
@@ -155,32 +172,16 @@ void tmp_task(void *pvParameters)
     humidity = 0.0;
     while(1)
     {
-       dht_read_float_data(SENSOR_TYPE, 33, &humidity, &temperature);
+       //dht_read_float_data(SENSOR_TYPE, 33, &humidity, &temperature);
        mqtt_publish_tmp(temperature);
        vTaskDelay(pdMS_TO_TICKS(400));
-       ESP_LOGI(TAG, "Temperatura: %f ºC", temperature);
     }
 }
 
 SemaphoreHandle_t sem;
 
-void fire_detected(void *pvParameters)
-{
-    int flag = 0;
-    while(flag == 0){
-        if(output_smk == 1 && (temperature > 100 || temperature < 200))
-        {
-            xSemaphoreGive(sem);
-            flag = 1;
-        }
-        vTaskDelay(pdMS_TO_TICKS(500));
-    }
-    vTaskDelete(NULL);
-}
-
 void fire_task(void *pvParameters)
 {
-    // Verificar que los manejadores sean válidos antes de nada
     if (sem == NULL) {
         ESP_LOGE(TAG, "Semáforo no inicializado");
         vTaskDelete(NULL);
@@ -193,7 +194,6 @@ void fire_task(void *pvParameters)
         return;
     }
 
-    // Crear el objeto JSON
     cJSON *root = cJSON_CreateObject();
     if (root == NULL) {
         ESP_LOGE(TAG, "Error al crear objeto JSON (sin memoria)");
@@ -210,7 +210,7 @@ void fire_task(void *pvParameters)
 
         char *post_data = cJSON_PrintUnformatted(root);
         if (post_data != NULL) {
-            esp_err_t err = esp_mqtt_client_publish(client, "esp32/edf1/address", post_data, 0, 1, 2);
+            esp_err_t err = esp_mqtt_client_publish(client, "edf1/address", post_data, 0, 1, 2);
             if (err != ESP_OK) {
                 ESP_LOGE(TAG, "Error al publicar mensaje MQTT: %s", esp_err_to_name(err));
             }
@@ -223,23 +223,57 @@ void fire_task(void *pvParameters)
     } else {
         ESP_LOGE(TAG, "No se pudo tomar el semáforo");
     }
-
     cJSON_Delete(root);
+    vTaskDelete(NULL);
+}
+
+void fire_detected(void *pvParameters)
+{
+    int flag = 0;
+    while(flag == 0){
+        if(output_smk == 1 && (temperature > 100 || temperature < 200))
+        {
+            xSemaphoreGive(sem);
+            static TaskHandle_t fireTaskHandle = NULL;
+            if (fireTaskHandle == NULL) {
+                xTaskCreate(fire_task, "fire_task", 8192, NULL, 5, &fireTaskHandle);
+            }
+            flag = 1;
+        }
+        //ESP_LOGI("HEAP", "Free heap: %d", esp_get_free_heap_size());
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
     vTaskDelete(NULL);
 }
 
 void app_main(void)
 {
-    sem = xSemaphoreCreateBinary();
-    assert(sem != NULL); 
-    
-    wifi_init_sta();
-    vTaskDelay(2000/portTICK_PERIOD_MS);
-    mqtt_app_start();
-    vTaskDelay(2000/portTICK_PERIOD_MS);
 
-    xTaskCreate(smk_task, "smk_task", configMINIMAL_STACK_SIZE * 3, NULL, 2, NULL);
-    xTaskCreate(tmp_task, "tmp_task", configMINIMAL_STACK_SIZE * 3, NULL, 3, NULL);
-    xTaskCreate(fire_detected, "fire_task", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
-    xTaskCreate(fire_task, "fire_task", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
+    sem = xSemaphoreCreateBinary();
+    assert(sem != NULL);
+    wifi_init_sta();
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    mqtt_app_start();
+
+    esp_mqtt_client_subscribe(client, "prueba/pru1", 0);
+
+    vTaskDelay(pdMS_TO_TICKS(2000));
+
+    BaseType_t res;
+
+    res = xTaskCreate(smk_task, "smk_task", 8192, NULL, 2, NULL);
+    if (res != pdPASS) {
+        ESP_LOGE("APP", "No se pudo crear la tarea smk_task");
+    }
+
+    res = xTaskCreate(tmp_task, "tmp_task", 8192, NULL, 3, NULL);
+    if (res != pdPASS) {
+        ESP_LOGE("APP", "No se pudo crear la tarea tmp_task");
+    }
+
+    // Crear tarea de detección de fuego (no la de envío directamente)
+    res = xTaskCreate(fire_detected, "fire_detect", 8192, NULL, 5, NULL);
+    if (res != pdPASS) {
+        ESP_LOGE("APP", "No se pudo crear la tarea fire_detected");
+    }
 }
