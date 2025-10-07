@@ -19,6 +19,8 @@
 #define MQTT_BROKER_URI "mqtt://broker.hivemq.com"
 
 #define STREET_NAME "Calle Gutiérrez Sañudo"
+#define LATITUDE 40.40303910258323
+#define LONGITUDE -3.6563807181369543
 #define FLOOR 3
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,
@@ -118,6 +120,7 @@ static void mqtt_publish_tmp(float temp)
     cJSON_AddNumberToObject(root, "payload",temp);
     char *post_data = cJSON_PrintUnformatted(root);
     esp_mqtt_client_publish(client, "esp32/edf1/tmp1", post_data, 0, 1, 1);
+    free(post_data);
 }
 
 static void mqtt_publish_smk(int valor)
@@ -127,9 +130,10 @@ static void mqtt_publish_smk(int valor)
     cJSON_AddNumberToObject(root, "payload",valor);
     char *post_data = cJSON_PrintUnformatted(root);
     esp_mqtt_client_publish(client, "esp32/edf1/smk1", post_data, 0, 1, 2);
+    free(post_data);
 }
 
-float temperature = 24.0;
+float temperature = 200.0;
 float humidity = 0.0;
 int output_smk;
 
@@ -158,33 +162,84 @@ void tmp_task(void *pvParameters)
     }
 }
 
+SemaphoreHandle_t sem;
+
 void fire_detected(void *pvParameters)
 {
-    while(1){
+    int flag = 0;
+    while(flag == 0){
         if(output_smk == 1 && (temperature > 100 || temperature < 200))
         {
-            cJSON *root = cJSON_CreateObject();
-
-            cJSON_AddStringToObject(root, "name", STREET_NAME);
-            cJSON_AddNumberToObject(root, "floor", FLOOR);
-            cJSON_AddNumberToObject(root, "smk", output_smk);
-            cJSON_AddNumberToObject(root, "tmp", temperature);
-            char *post_data = cJSON_PrintUnformatted(root);
-            esp_mqtt_client_publish(client, "esp32/edf1/building", post_data, 0, 1, 2);
+            xSemaphoreGive(sem);
+            flag = 1;
         }
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
+    vTaskDelete(NULL);
+}
+
+void fire_task(void *pvParameters)
+{
+    // Verificar que los manejadores sean válidos antes de nada
+    if (sem == NULL) {
+        ESP_LOGE(TAG, "Semáforo no inicializado");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    if (client == NULL) {
+        ESP_LOGE(TAG, "Cliente MQTT no inicializado");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    // Crear el objeto JSON
+    cJSON *root = cJSON_CreateObject();
+    if (root == NULL) {
+        ESP_LOGE(TAG, "Error al crear objeto JSON (sin memoria)");
+        vTaskDelete(NULL);
+        return;
+    }
+
+    cJSON_AddStringToObject(root, "name", STREET_NAME);
+    cJSON_AddNumberToObject(root, "lat", LATITUDE);
+    cJSON_AddNumberToObject(root, "lon", LONGITUDE);
+
+    if (xSemaphoreTake(sem, portMAX_DELAY) == pdTRUE) {
+        ESP_LOGI(TAG, "ENVIANDO ALERTA");
+
+        char *post_data = cJSON_PrintUnformatted(root);
+        if (post_data != NULL) {
+            esp_err_t err = esp_mqtt_client_publish(client, "esp32/edf1/address", post_data, 0, 1, 2);
+            if (err != ESP_OK) {
+                ESP_LOGE(TAG, "Error al publicar mensaje MQTT: %s", esp_err_to_name(err));
+            }
+            free(post_data);
+        } else {
+            ESP_LOGE(TAG, "Error al convertir JSON a texto");
+        }
+
+        xSemaphoreGive(sem);
+    } else {
+        ESP_LOGE(TAG, "No se pudo tomar el semáforo");
+    }
+
+    cJSON_Delete(root);
+    vTaskDelete(NULL);
 }
 
 void app_main(void)
 {
+    sem = xSemaphoreCreateBinary();
+    assert(sem != NULL); 
+    
     wifi_init_sta();
     vTaskDelay(2000/portTICK_PERIOD_MS);
     mqtt_app_start();
     vTaskDelay(2000/portTICK_PERIOD_MS);
-    ESP_LOGI(TAG, "EMPIEZA MQTT");
 
     xTaskCreate(smk_task, "smk_task", configMINIMAL_STACK_SIZE * 3, NULL, 2, NULL);
-    xTaskCreate(tmp_task, "tmp_task", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
-    xTaskCreate(fire_detected, "fire_task", configMINIMAL_STACK_SIZE * 3, NULL, 7, NULL);
+    xTaskCreate(tmp_task, "tmp_task", configMINIMAL_STACK_SIZE * 3, NULL, 3, NULL);
+    xTaskCreate(fire_detected, "fire_task", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
+    xTaskCreate(fire_task, "fire_task", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL);
 }
