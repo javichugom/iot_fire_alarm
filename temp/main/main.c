@@ -14,14 +14,14 @@
 
 #define TAG "EMERGENCY_FIRE"
 
-#define WIFI_SSID      "*"
-#define WIFI_PASS      "*"
+#define WIFI_SSID      "MOVISTAR-WIFI6-F000"
+#define WIFI_PASS      "nKJETHW3CJ9T9EUU9FWC"
 #define MQTT_BROKER_URI "mqtt://broker.hivemq.com"
 
-#define STREET_NAME "*"
-#define LATITUDE 0
-#define LONGITUDE 0
-#define FLOOR 1
+#define STREET_NAME "Calle Gutierrez Saniudo"
+#define LATITUDE 40.40301459242682
+#define LONGITUDE -3.6561875990884785
+#define FLOOR 2
 #define SENSOR_TYPE DHT_TYPE_DHT11
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,
@@ -81,16 +81,22 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "Conectado al broker Node-RED!");
+             esp_mqtt_client_subscribe(client, "edf1/+/reset", 1);
             break;
 
         case MQTT_EVENT_DATA:
-            ESP_LOGI(TAG, "Mensaje recibido en %.*s: %.*s",
-                     event->topic_len, event->topic,
-                     event->data_len, event->data);
-            ESP_LOGI(TAG, "Payload: %.*s", event->data_len, event->data);
+            char topic[50];
+            snprintf(topic, event->topic_len + 1, "%.*s", event->topic_len, event->topic);
+            ESP_LOGI (TAG, "MENSAJE RECIBIDO %s", topic);
+            if(strcmp(topic, "edf1/fl1/reset") == 0 || strcmp(topic, "edf1/fl2/reset"))
+            {
+                ESP_LOGI (TAG, "RESETEANDO");
+                esp_restart();
+            }
             break;
         case MQTT_EVENT_SUBSCRIBED:
-             ESP_LOGI(TAG, "Suscripción confirmada, msg_id=%d", event->msg_id);
+            ESP_LOGI(TAG, "Suscripción confirmada, msg_id=%d", event->msg_id);
+            break;
         default:
             break;
     }
@@ -113,7 +119,11 @@ static void mqtt_app_start() {
     client = esp_mqtt_client_init(&mqtt_cfg);
     
     esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, client);
-    esp_mqtt_client_start(client);
+    while(esp_mqtt_client_start(client) != ESP_FAIL)
+    {
+        ESP_LOGE(TAG, "ESPERANDO CONEXIÓN...");
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
 }
 
 static void mqtt_publish_tmp(float temp)
@@ -122,7 +132,7 @@ static void mqtt_publish_tmp(float temp)
 
     cJSON_AddNumberToObject(root, "payload",temp);
     char *post_data = cJSON_PrintUnformatted(root);
-    esp_mqtt_client_publish(client, "edf1/fl2/tmp1", post_data, 0, 1, 1);
+    esp_mqtt_client_publish(client, "edf1/fl1/tmp1", post_data, 0, 1, 1);
     free(post_data);
     cJSON_Delete(root);
 }
@@ -133,7 +143,7 @@ static void mqtt_publish_smk(int valor)
 
     cJSON_AddNumberToObject(root, "payload",valor);
     char *post_data = cJSON_PrintUnformatted(root);
-    esp_mqtt_client_publish(client, "edf1/fl2/smk1", post_data, 0, 1, 1);
+    esp_mqtt_client_publish(client, "edf1/fl1/smk1", post_data, 0, 1, 1);
     free(post_data);
     cJSON_Delete(root);
 }
@@ -146,7 +156,7 @@ static void mqtt_publish_tmp_register(float temp, int smk)
     cJSON_AddNumberToObject(root, "smk", smk);
     cJSON_AddNumberToObject(root, "flr", 2);
     char *post_data = cJSON_PrintUnformatted(root);
-    esp_mqtt_client_publish(client, "edf1/fl2/reg1", post_data, 0, 1, 1);
+    esp_mqtt_client_publish(client, "edf1/fl1/reg1", post_data, 0, 1, 1);
     free(post_data);
     cJSON_Delete(root);
 }
@@ -252,11 +262,8 @@ void app_main(void)
     sem = xSemaphoreCreateBinary();
     assert(sem != NULL);
     wifi_init_sta();
-    vTaskDelay(pdMS_TO_TICKS(2000));
+    vTaskDelay(pdMS_TO_TICKS(5000));
     mqtt_app_start();
-
-    esp_mqtt_client_subscribe(client, "prueba/pru1", 0);
-
     vTaskDelay(pdMS_TO_TICKS(2000));
 
     BaseType_t res;

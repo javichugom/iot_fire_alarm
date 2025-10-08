@@ -21,6 +21,7 @@
     "stdio.h": "c",
     "esp_wifi.h": "c",
     "mq_sensor.h": "c",
-    "gpio.h": "c"
+    "gpio.h": "c",
+    "random": "c"
   }
 }
