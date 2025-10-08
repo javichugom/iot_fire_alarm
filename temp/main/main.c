@@ -14,13 +14,13 @@
 
 #define TAG "EMERGENCY_FIRE"
 
-#define WIFI_SSID      "MOVISTAR-WIFI6-F000"
-#define WIFI_PASS      "nKJETHW3CJ9T9EUU9FWC"
+#define WIFI_SSID      "*"
+#define WIFI_PASS      "*"
 #define MQTT_BROKER_URI "mqtt://broker.hivemq.com"
 
-#define STREET_NAME "Calle Gutierrez Saniudo"
-#define LATITUDE 40.40301459242682
-#define LONGITUDE -3.6561875990884785
+#define STREET_NAME "*"
+#define LATITUDE 0
+#define LONGITUDE 0
 #define FLOOR 2
 #define SENSOR_TYPE DHT_TYPE_DHT11
 
@@ -65,7 +65,8 @@ void wifi_init_sta(void) {
             .ssid = WIFI_SSID,
             .password = WIFI_PASS,
             .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-        },
+            
+        }
     };
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
@@ -110,7 +111,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
 esp_mqtt_client_config_t mqtt_cfg = {
     .broker.address.uri = MQTT_BROKER_URI,
-    .broker.address.port = 1883,    
+    .broker.address.port = 1883,   
+    .session.last_will.topic = "edf1/fl1/error",
+    .session.last_will.msg = "Dispositivo del Piso 1 se ha desconectado",
+    .session.last_will.qos = 1,
+    .session.last_will.retain = true, 
+    .session.keepalive = 30,
 };
 
 esp_mqtt_client_handle_t client;
