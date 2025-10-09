@@ -14,14 +14,14 @@
 
 #define TAG "EMERGENCY_FIRE"
 
-#define WIFI_SSID      "*"
-#define WIFI_PASS      "*"
+#define WIFI_SSID      "CMF"
+#define WIFI_PASS      "javiergo"
 #define MQTT_BROKER_URI "mqtt://broker.hivemq.com"
 
-#define STREET_NAME "*"
-#define LATITUDE 0
-#define LONGITUDE 0
-#define FLOOR 2
+#define STREET_NAME "Calle de Arboleda"
+#define LATITUDE 40.384908195236974
+#define LONGITUDE -3.6260672430381855
+#define FLOOR 1
 #define SENSOR_TYPE DHT_TYPE_DHT11
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,
@@ -82,14 +82,14 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event) {
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "Conectado al broker Node-RED!");
-             esp_mqtt_client_subscribe(client, "edf1/+/reset", 1);
+             esp_mqtt_client_subscribe(client, "edf2/+/reset", 1);
             break;
 
         case MQTT_EVENT_DATA:
             char topic[50];
             snprintf(topic, event->topic_len + 1, "%.*s", event->topic_len, event->topic);
             ESP_LOGI (TAG, "MENSAJE RECIBIDO %s", topic);
-            if(strcmp(topic, "edf1/fl1/reset") == 0 || strcmp(topic, "edf1/fl2/reset"))
+            if(strcmp(topic, "edf2/fl1/reset") == 0 || strcmp(topic, "edf2/fl2/reset"))
             {
                 ESP_LOGI (TAG, "RESETEANDO");
                 esp_restart();
@@ -112,7 +112,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 esp_mqtt_client_config_t mqtt_cfg = {
     .broker.address.uri = MQTT_BROKER_URI,
     .broker.address.port = 1883,   
-    .session.last_will.topic = "edf1/fl1/error",
+    .session.last_will.topic = "edf2/fl2/error",
     .session.last_will.msg = "Dispositivo del Piso 1 se ha desconectado",
     .session.last_will.qos = 1,
     .session.last_will.retain = true, 
@@ -138,7 +138,7 @@ static void mqtt_publish_tmp(float temp)
 
     cJSON_AddNumberToObject(root, "payload",temp);
     char *post_data = cJSON_PrintUnformatted(root);
-    esp_mqtt_client_publish(client, "edf1/fl1/tmp1", post_data, 0, 1, 1);
+    esp_mqtt_client_publish(client, "edf2/fl2/tmp1", post_data, 0, 1, 1);
     free(post_data);
     cJSON_Delete(root);
 }
@@ -149,7 +149,7 @@ static void mqtt_publish_smk(int valor)
 
     cJSON_AddNumberToObject(root, "payload",valor);
     char *post_data = cJSON_PrintUnformatted(root);
-    esp_mqtt_client_publish(client, "edf1/fl1/smk1", post_data, 0, 1, 1);
+    esp_mqtt_client_publish(client, "edf2/fl2/smk1", post_data, 0, 1, 1);
     free(post_data);
     cJSON_Delete(root);
 }
@@ -162,7 +162,7 @@ static void mqtt_publish_tmp_register(float temp, int smk)
     cJSON_AddNumberToObject(root, "smk", smk);
     cJSON_AddNumberToObject(root, "flr", 2);
     char *post_data = cJSON_PrintUnformatted(root);
-    esp_mqtt_client_publish(client, "edf1/fl1/reg1", post_data, 0, 1, 1);
+    esp_mqtt_client_publish(client, "edf2/fl2/reg1", post_data, 0, 1, 1);
     free(post_data);
     cJSON_Delete(root);
 }
@@ -226,7 +226,7 @@ void fire_task(void *pvParameters)
 
         char *post_data = cJSON_PrintUnformatted(root);
         if (post_data != NULL) {
-            esp_err_t err = esp_mqtt_client_publish(client, "edf1/address", post_data, 0, 1, 2);
+            esp_err_t err = esp_mqtt_client_publish(client, "edf2/address", post_data, 0, 1, 2);
             if (err != ESP_OK) {
                 ESP_LOGE(TAG, "Error al publicar mensaje MQTT: %s", esp_err_to_name(err));
             }
