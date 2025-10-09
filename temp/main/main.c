@@ -14,13 +14,13 @@
 
 #define TAG "EMERGENCY_FIRE"
 
-#define WIFI_SSID      "MOVISTAR-WIFI6-F000"
-#define WIFI_PASS      "nKJETHW3CJ9T9EUU9FWC"
+#define WIFI_SSID      "*"
+#define WIFI_PASS      "*"
 #define MQTT_BROKER_URI "mqtt://broker.hivemq.com"
 
-#define STREET_NAME "Calle Gutierrez Saniudo"
-#define LATITUDE 40.40301459242682
-#define LONGITUDE -3.6561875990884785
+#define STREET_NAME "*"
+#define LATITUDE 0
+#define LONGITUDE 0
 #define FLOOR 2
 #define SENSOR_TYPE DHT_TYPE_DHT11
 
@@ -188,7 +188,7 @@ void tmp_task(void *pvParameters)
     humidity = 0.0;
     while(1)
     {
-       //dht_read_float_data(SENSOR_TYPE, 33, &humidity, &temperature);
+       dht_read_float_data(SENSOR_TYPE, 33, &humidity, &temperature);
        mqtt_publish_tmp(temperature);
        vTaskDelay(pdMS_TO_TICKS(400));
     }
