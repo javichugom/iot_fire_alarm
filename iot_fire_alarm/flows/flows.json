@@ -1,0 +1,626 @@
+[
+    {
+        "id": "e75efed9febc78e5",
+        "type": "tab",
+        "label": "Flow 2",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "9450a84aaa99ec78",
+        "type": "aedes broker",
+        "z": "e75efed9febc78e5",
+        "name": "",
+        "mqtt_port": 1883,
+        "mqtt_ws_bind": "port",
+        "mqtt_ws_port": "",
+        "mqtt_ws_path": "",
+        "cert": "",
+        "key": "",
+        "ca": "",
+        "certname": "",
+        "keyname": "",
+        "caname": "",
+        "persistence_bind": "memory",
+        "dburl": "",
+        "usetls": false,
+        "x": 150,
+        "y": 500,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "a6354e5f0ea73681",
+        "type": "mqtt in",
+        "z": "e75efed9febc78e5",
+        "name": "receive tmp1",
+        "topic": "edf1/fl1/tmp1",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "93103fb07a82de8c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 90,
+        "y": 580,
+        "wires": [
+            [
+                "ea44fce22ac60c56"
+            ]
+        ]
+    },
+    {
+        "id": "ea44fce22ac60c56",
+        "type": "function",
+        "z": "e75efed9febc78e5",
+        "name": "send_temp1",
+        "func": "let valor = msg.payload;\nreturn valor;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 580,
+        "wires": [
+            [
+                "416b0ccc3e519af3",
+                "11fe34f6292d07f9"
+            ]
+        ]
+    },
+    {
+        "id": "e97605484b1f6de2",
+        "type": "mqtt in",
+        "z": "e75efed9febc78e5",
+        "name": "receive smk1",
+        "topic": "edf1/fl1/smk1",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "93103fb07a82de8c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 90,
+        "y": 820,
+        "wires": [
+            [
+                "482958d3b5c09bc6"
+            ]
+        ]
+    },
+    {
+        "id": "482958d3b5c09bc6",
+        "type": "function",
+        "z": "e75efed9febc78e5",
+        "name": "send_smk1",
+        "func": "let valor = msg.payload;\nreturn valor;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 820,
+        "wires": [
+            [
+                "2ca3c25195879024"
+            ]
+        ]
+    },
+    {
+        "id": "2ca3c25195879024",
+        "type": "switch",
+        "z": "e75efed9febc78e5",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 550,
+        "y": 820,
+        "wires": [
+            [
+                "da117bdf62c7d5e3"
+            ]
+        ]
+    },
+    {
+        "id": "416b0ccc3e519af3",
+        "type": "ui_chart",
+        "z": "e75efed9febc78e5",
+        "name": "",
+        "group": "c3a43e776e6a8bb6",
+        "order": 2,
+        "width": "6",
+        "height": "4",
+        "label": "Registro 1",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "1000",
+        "removeOlder": "10",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 590,
+        "y": 580,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "da117bdf62c7d5e3",
+        "type": "function",
+        "z": "e75efed9febc78e5",
+        "name": "send_aviso1",
+        "func": "msg.payload = \"SE DETECTA HUMO EN PISO 1\"\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 820,
+        "wires": [
+            [
+                "5c233afcc3a53b27"
+            ]
+        ]
+    },
+    {
+        "id": "5c233afcc3a53b27",
+        "type": "ui_audio",
+        "z": "e75efed9febc78e5",
+        "name": "",
+        "group": "c3a43e776e6a8bb6",
+        "voice": "Microsoft Helena - Spanish (Spain)",
+        "always": false,
+        "x": 940,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "11fe34f6292d07f9",
+        "type": "ui_gauge",
+        "z": "e75efed9febc78e5",
+        "name": "Temperatura Piso 1",
+        "group": "c3a43e776e6a8bb6",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "tmp1",
+        "label": "°C",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "200",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 610,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "9af9f003bd52c5de",
+        "type": "mqtt in",
+        "z": "e75efed9febc78e5",
+        "name": "receive tmp2",
+        "topic": "edf1/fl2/tmp1",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "93103fb07a82de8c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 130,
+        "y": 700,
+        "wires": [
+            [
+                "4893d5ec264fcb1b"
+            ]
+        ]
+    },
+    {
+        "id": "4893d5ec264fcb1b",
+        "type": "function",
+        "z": "e75efed9febc78e5",
+        "name": "Send_temp2",
+        "func": "let valor = msg.payload;\nreturn valor;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 700,
+        "wires": [
+            [
+                "03c0fc0fd78bc73c",
+                "e20958d934f56cda"
+            ]
+        ]
+    },
+    {
+        "id": "03c0fc0fd78bc73c",
+        "type": "ui_chart",
+        "z": "e75efed9febc78e5",
+        "name": "",
+        "group": "2fd918c614cbef73",
+        "order": 2,
+        "width": "6",
+        "height": "4",
+        "label": "Registro 2",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "1000",
+        "removeOlder": "10",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 630,
+        "y": 700,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e20958d934f56cda",
+        "type": "ui_gauge",
+        "z": "e75efed9febc78e5",
+        "name": "Temperatura Piso 2",
+        "group": "2fd918c614cbef73",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "tmp2",
+        "label": "°C",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "200",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 650,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "fa209040d3a519b6",
+        "type": "ui_audio",
+        "z": "e75efed9febc78e5",
+        "name": "",
+        "group": "c3a43e776e6a8bb6",
+        "voice": "Microsoft Helena - Spanish (Spain)",
+        "always": false,
+        "x": 940,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "1f45bef47a4a34b8",
+        "type": "mqtt in",
+        "z": "e75efed9febc78e5",
+        "name": "receive smk2",
+        "topic": "edf1/fl2/smk1",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "93103fb07a82de8c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 90,
+        "y": 940,
+        "wires": [
+            [
+                "a4d15460437d602e"
+            ]
+        ]
+    },
+    {
+        "id": "a4d15460437d602e",
+        "type": "function",
+        "z": "e75efed9febc78e5",
+        "name": "send_smk2",
+        "func": "let valor = msg.payload;\nreturn valor;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 940,
+        "wires": [
+            [
+                "290372cf293c564b"
+            ]
+        ]
+    },
+    {
+        "id": "290372cf293c564b",
+        "type": "switch",
+        "z": "e75efed9febc78e5",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 550,
+        "y": 940,
+        "wires": [
+            [
+                "f9aeaf6209c12f12"
+            ]
+        ]
+    },
+    {
+        "id": "f9aeaf6209c12f12",
+        "type": "function",
+        "z": "e75efed9febc78e5",
+        "name": "send_aviso2",
+        "func": "msg.payload = \"SE DETECTA HUMO EN PISO 2\"\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 940,
+        "wires": [
+            [
+                "fa209040d3a519b6"
+            ]
+        ]
+    },
+    {
+        "id": "37d1310731fb4c23",
+        "type": "ui_button",
+        "z": "e75efed9febc78e5",
+        "name": "",
+        "group": "5cb1d8450b3ac0d8",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "button",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 90,
+        "y": 1080,
+        "wires": [
+            [
+                "1810cbb024e46ea7"
+            ]
+        ]
+    },
+    {
+        "id": "1810cbb024e46ea7",
+        "type": "mqtt out",
+        "z": "e75efed9febc78e5",
+        "name": "",
+        "topic": "edf1/fl1/reset",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "93103fb07a82de8c",
+        "x": 350,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "81ae847fcf66f1ba",
+        "type": "mqtt in",
+        "z": "e75efed9febc78e5",
+        "name": "recieve error",
+        "topic": "edf1/+/error",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "93103fb07a82de8c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 590,
+        "y": 1060,
+        "wires": [
+            [
+                "60ef6d0a2371f644"
+            ]
+        ]
+    },
+    {
+        "id": "60ef6d0a2371f644",
+        "type": "ui_toast",
+        "z": "e75efed9febc78e5",
+        "position": "top right",
+        "displayTime": "3",
+        "highlight": "",
+        "sendall": true,
+        "outputs": 0,
+        "ok": "OK",
+        "cancel": "",
+        "raw": false,
+        "className": "",
+        "topic": "",
+        "name": "",
+        "x": 950,
+        "y": 1060,
+        "wires": []
+    },
+    {
+        "id": "93103fb07a82de8c",
+        "type": "mqtt-broker",
+        "name": "emergencyFire",
+        "broker": "broker.hivemq.com",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "c3a43e776e6a8bb6",
+        "type": "ui_group",
+        "name": "Piso1",
+        "tab": "47eab133f57fa06c",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "2fd918c614cbef73",
+        "type": "ui_group",
+        "name": "Piso 2",
+        "tab": "47eab133f57fa06c",
+        "order": 2,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "5cb1d8450b3ac0d8",
+        "type": "ui_group",
+        "name": "Reiniciar ESP32",
+        "tab": "47eab133f57fa06c",
+        "order": 3,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "47eab133f57fa06c",
+        "type": "ui_tab",
+        "name": "Calle Gutiérrez Sañudo",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "07df1e663b9b2dae",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-aedes": "0.15.0",
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]

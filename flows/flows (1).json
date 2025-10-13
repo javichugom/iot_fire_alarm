@@ -1,0 +1,313 @@
+[
+    {
+        "id": "22195310c73e9641",
+        "type": "tab",
+        "label": "Flow 3",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "e335604e096baae4",
+        "type": "mqtt in",
+        "z": "22195310c73e9641",
+        "name": "build_delivery",
+        "topic": "+/address",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "93103fb07a82de8c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 130,
+        "y": 280,
+        "wires": [
+            [
+                "27911fda1bf889a8",
+                "491837c76f1b287d",
+                "6e674b50c208353c",
+                "361d0d6114a74c46"
+            ]
+        ]
+    },
+    {
+        "id": "27911fda1bf889a8",
+        "type": "function",
+        "z": "22195310c73e9641",
+        "name": "Mandar_Datos",
+        "func": "return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 360,
+        "wires": [
+            [
+                "12dc491bd81ccaf9"
+            ]
+        ]
+    },
+    {
+        "id": "12dc491bd81ccaf9",
+        "type": "ui_worldmap",
+        "z": "22195310c73e9641",
+        "group": "59995f337098f9ca",
+        "order": 2,
+        "width": "6",
+        "height": "7",
+        "name": "",
+        "lat": "40.39482637975177",
+        "lon": " -3.653054177651531",
+        "zoom": "14",
+        "layer": "OSMC",
+        "cluster": "",
+        "maxage": "100",
+        "usermenu": "hide",
+        "layers": "hide",
+        "panit": "false",
+        "panlock": "true",
+        "zoomlock": "false",
+        "hiderightclick": "true",
+        "coords": "none",
+        "showgrid": "false",
+        "showruler": "false",
+        "allowFileDrop": "false",
+        "path": "/worldmap",
+        "overlist": "DR,CO,RA,DN,HM",
+        "maplist": "OSMG,OSMC,EsriC,EsriS,EsriT,EsriDG,UKOS",
+        "mapname": "",
+        "mapurl": "",
+        "mapopt": "",
+        "mapwms": false,
+        "x": 680,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "5e2a62ca135ce7ac",
+        "type": "ui_toast",
+        "z": "22195310c73e9641",
+        "position": "top right",
+        "displayTime": "3",
+        "highlight": "",
+        "sendall": true,
+        "outputs": 0,
+        "ok": "OK",
+        "cancel": "",
+        "raw": false,
+        "className": "",
+        "topic": "",
+        "name": "Fire_alarm",
+        "x": 690,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "491837c76f1b287d",
+        "type": "function",
+        "z": "22195310c73e9641",
+        "name": "Mandar_Alarma",
+        "func": "msg.payload = \"Se detecto un fuego!!\"\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 240,
+        "wires": [
+            [
+                "5e2a62ca135ce7ac"
+            ]
+        ]
+    },
+    {
+        "id": "55ca071e93328c08",
+        "type": "ui_chart",
+        "z": "22195310c73e9641",
+        "name": "",
+        "group": "59995f337098f9ca",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "#incendios/día",
+        "chartType": "bar",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "20",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 620,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6e674b50c208353c",
+        "type": "function",
+        "z": "22195310c73e9641",
+        "name": "Registro de incendios",
+        "func": "const DUPLICATE_WINDOW = 30 * 1000;\n\nlet datos = global.get(\"incendios\") || {fecha: \"\", cont: 0, lastIncendio: 0};\n\nlet hoy = new Date().toISOString().slice(0,10);\n\nif(datos.fecha != hoy)\n{\n    datos = {fecha: hoy, cont: 0, lastIncendio: 0};\n}\n\nlet ahora = Date.now();\n\nif (ahora - datos.lastIncendio > DUPLICATE_WINDOW)\n{\n    datos.cont += 1;\n    datos.lasIndencio = ahora;\n}\n\nglobal.set(\"incendios\", datos);\n\nmsg.payload = \n{\n    fecha: datos.fecha,\n    incendios_hoy: datos.cont\n};\nmsg.payload = msg.payload.incendios_hoy;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 440,
+        "wires": [
+            [
+                "55ca071e93328c08"
+            ]
+        ]
+    },
+    {
+        "id": "361d0d6114a74c46",
+        "type": "function",
+        "z": "22195310c73e9641",
+        "name": "Registro_de_incendios_CSV",
+        "func": "let hoy = new Date();\n\nmsg.payload = \n{\n    fecha: hoy.toISOString().slice(0,10),\n    lastHour: hoy.toLocaleTimeString(\"es-ES\", {hour12: false}),\n    street : msg.payload.name\n};\n\nmsg.payload = msg.payload.fecha + \",\" + msg.payload.lastHour + \",\" + msg.payload.street\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 640,
+        "wires": [
+            [
+                "5ad4991dd22ec149"
+            ]
+        ]
+    },
+    {
+        "id": "5d0f8974fc9b05fa",
+        "type": "file",
+        "z": "22195310c73e9641",
+        "name": "",
+        "filename": "C:\\Users\\RaSS0\\Desktop\\Register2.csv",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 980,
+        "y": 640,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5ad4991dd22ec149",
+        "type": "csv",
+        "z": "22195310c73e9641",
+        "name": "Fire Register",
+        "spec": "rfc",
+        "sep": ",",
+        "hdrin": "",
+        "hdrout": "once",
+        "multi": "one",
+        "ret": "\\r\\n",
+        "temp": "date, lastHour, street",
+        "skip": "0",
+        "strings": true,
+        "include_empty_strings": "",
+        "include_null_values": "",
+        "x": 690,
+        "y": 640,
+        "wires": [
+            [
+                "5d0f8974fc9b05fa"
+            ]
+        ]
+    },
+    {
+        "id": "93103fb07a82de8c",
+        "type": "mqtt-broker",
+        "name": "emergencyFire",
+        "broker": "broker.hivemq.com",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "59995f337098f9ca",
+        "type": "ui_group",
+        "name": "Central de Vallecas",
+        "tab": "e0433270dd4866f6",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "e0433270dd4866f6",
+        "type": "ui_tab",
+        "name": "Bomberos Parque 8º Vallecas",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "cc05d50d01e00e5d",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-web-worldmap": "5.5.2",
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
